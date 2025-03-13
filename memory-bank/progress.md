@@ -49,10 +49,13 @@
 1. Member Management
    - データ永続化の実装済み
    - 大容量データ時のパフォーマンス未検証
+   - チャット機能との同期が必要 (#1)
 
 2. Chat System
    - データ永続化未実装
    - リアルタイム更新の対応が必要
+   - メンバー登録時の即時反映対応が必要 (#1)
+   - StorageAdapterの活用が必要
 
 3. Tag System
    - データ永続化未実装
@@ -60,5 +63,6 @@
 
 ## Next Priorities
 1. Complete core member management functionality
-2. Implement basic chat features
-3. Finalize tag management system
+2. Implement chat view synchronization with member management (#1)
+3. Add StorageAdapter support to chat system
+4. Finalize tag management system
