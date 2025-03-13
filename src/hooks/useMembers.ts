@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Member, MemberFormData } from '../types';
+import { createStorageAdapter } from '../storage/StorageAdapter';
 
-// サンプルデータ
-const initialMembers: Member[] = [
+const STORAGE_KEY = 'members';
+const storageAdapter = createStorageAdapter();
+
+// サンプルデータ - 初回のみ使用
+const initialMembersData: Member[] = [
   {
     id: '1',
     name: '山田太郎',
@@ -30,46 +34,97 @@ const initialMembers: Member[] = [
 ];
 
 export const useMembers = () => {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [members, setMembers] = useState<Member[]>([]);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addMember = (memberData: MemberFormData) => {
+  // 初期データの読み込み
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        const storedMembers = await storageAdapter.getItem<Member[]>(STORAGE_KEY);
+        if (storedMembers) {
+          setMembers(storedMembers);
+        } else {
+          // 初回のみサンプルデータを使用
+          await storageAdapter.setItem(STORAGE_KEY, initialMembersData);
+          setMembers(initialMembersData);
+        }
+      } catch (error) {
+        console.error('メンバーデータの読み込みに失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
+
+  // メンバー追加
+  const addMember = async (memberData: MemberFormData) => {
     const newMember: Member = {
       id: Date.now().toString(),
       ...memberData,
-      // imageDataが存在する場合はそれを使用、そうでない場合はimageUrlを使用
       imageUrl: memberData.imageData || memberData.imageUrl,
       isEditable: true,
       createdAt: new Date().toISOString()
     };
-    setMembers(prev => [...prev, newMember]);
-    return newMember; // 追加したメンバー情報を返す
+
+    try {
+      const updatedMembers = [...members, newMember];
+      await storageAdapter.setItem(STORAGE_KEY, updatedMembers);
+      setMembers(updatedMembers);
+      return newMember;
+    } catch (error) {
+      console.error('メンバーの追加に失敗しました:', error);
+      throw error;
+    }
   };
 
-  const updateMember = (id: string, memberData: MemberFormData) => {
-    setMembers(prev =>
-      prev.map(member =>
+  // メンバー更新
+  const updateMember = async (id: string, memberData: MemberFormData) => {
+    try {
+      const updatedMembers = members.map(member =>
         member.id === id
           ? {
               ...member,
               ...memberData,
-              // imageDataが存在する場合はそれを使用、そうでない場合はimageUrlを使用
               imageUrl: memberData.imageData || memberData.imageUrl,
             }
           : member
-      )
-    );
+      );
+      await storageAdapter.setItem(STORAGE_KEY, updatedMembers);
+      setMembers(updatedMembers);
+    } catch (error) {
+      console.error('メンバーの更新に失敗しました:', error);
+      throw error;
+    }
   };
 
-  const deleteMember = (id: string) => {
-    setMembers(prev => prev.filter(member => member.id !== id));
+  // メンバー削除
+  const deleteMember = async (id: string) => {
+    try {
+      const updatedMembers = members.filter(member => member.id !== id);
+      await storageAdapter.setItem(STORAGE_KEY, updatedMembers);
+      setMembers(updatedMembers);
+    } catch (error) {
+      console.error('メンバーの削除に失敗しました:', error);
+      throw error;
+    }
   };
 
-  const reorderMembers = (startIndex: number, endIndex: number) => {
-    const result = Array.from(members);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    setMembers(result);
+  // メンバー並び替え
+  const reorderMembers = async (startIndex: number, endIndex: number) => {
+    try {
+      const result = Array.from(members);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      await storageAdapter.setItem(STORAGE_KEY, result);
+      setMembers(result);
+    } catch (error) {
+      console.error('メンバーの並び替えに失敗しました:', error);
+      throw error;
+    }
   };
 
   return {
@@ -79,6 +134,7 @@ export const useMembers = () => {
     addMember,
     updateMember,
     deleteMember,
-    reorderMembers
+    reorderMembers,
+    isLoading
   };
 };
