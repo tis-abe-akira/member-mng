@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Chat, Message } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { createStorageAdapter } from '../storage/StorageAdapter';
+
+const STORAGE_KEY = 'chats';
+const MESSAGES_KEY = 'chat_messages';
+const storageAdapter = createStorageAdapter();
 
 // モックデータ用のサンプルメッセージ
 const sampleMessages: Message[] = [
@@ -62,15 +67,46 @@ const sampleChats: Chat[] = [
 ];
 
 export const useChats = () => {
-  const [chats, setChats] = useState<Chat[]>(sampleChats);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({
-    '1': sampleMessages,
-  });
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [currentUserId] = useState('current-user'); // 実際のアプリでは認証システムから取得
 
+  // 初期データの読み込み
+  useEffect(() => {
+    const loadChats = async () => {
+      try {
+        const storedChats = await storageAdapter.getItem<Chat[]>(STORAGE_KEY);
+        const storedMessages = await storageAdapter.getItem<Record<string, Message[]>>(MESSAGES_KEY);
+        
+        if (storedChats) {
+          setChats(storedChats);
+        } else {
+          // 初回のみサンプルデータを使用
+          await storageAdapter.setItem(STORAGE_KEY, sampleChats);
+          setChats(sampleChats);
+        }
+
+        if (storedMessages) {
+          setMessages(storedMessages);
+        } else {
+          const initialMessages = { '1': sampleMessages };
+          await storageAdapter.setItem(MESSAGES_KEY, initialMessages);
+          setMessages(initialMessages);
+        }
+      } catch (error) {
+        console.error('チャットデータの読み込みに失敗しました:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadChats();
+  }, []);
+
   // チャットの選択
-  const selectChat = (chatId: string) => {
+  const selectChat = async (chatId: string) => {
     const chat = chats.find(c => c.id === chatId);
     if (chat) {
       setSelectedChat(chat);
@@ -90,7 +126,7 @@ export const useChats = () => {
   };
 
   // メッセージの送信
-  const sendMessage = (chatId: string, content: string) => {
+  const sendMessage = async (chatId: string, content: string) => {
     const newMessage: Message = {
       id: uuidv4(),
       senderId: currentUserId,
@@ -100,15 +136,17 @@ export const useChats = () => {
       isRead: false,
     };
 
-    // メッセージを追加
-    setMessages(prev => ({
-      ...prev,
-      [chatId]: [...(prev[chatId] || []), newMessage],
-    }));
+    try {
+      // メッセージを追加
+      const updatedMessages = {
+        ...messages,
+        [chatId]: [...(messages[chatId] || []), newMessage],
+      };
+      await storageAdapter.setItem(MESSAGES_KEY, updatedMessages);
+      setMessages(updatedMessages);
 
-    // チャットの最終メッセージを更新
-    setChats(prev => 
-      prev.map(chat => 
+      // チャットの最終メッセージを更新
+      const updatedChats = chats.map(chat => 
         chat.id === chatId 
           ? { 
               ...chat, 
@@ -116,8 +154,13 @@ export const useChats = () => {
               updatedAt: newMessage.timestamp 
             } 
           : chat
-      )
-    );
+      );
+      await storageAdapter.setItem(STORAGE_KEY, updatedChats);
+      setChats(updatedChats);
+    } catch (error) {
+      console.error('メッセージの送信に失敗しました:', error);
+      throw error;
+    }
 
     // 自動応答を生成（1秒後）
     setTimeout(() => {
@@ -169,7 +212,7 @@ export const useChats = () => {
   };
 
   // 新しいチャットの作成
-  const createChat = (participantId: string) => {
+  const createChat = async (participantId: string) => {
     // 既存のチャットをチェック
     const existingChat = chats.find(chat => 
       chat.participants.includes(currentUserId) && 
@@ -188,27 +231,44 @@ export const useChats = () => {
       updatedAt: new Date().toISOString(),
     };
 
-    setChats(prev => [...prev, newChat]);
-    setSelectedChat(newChat);
-    setMessages(prev => ({
-      ...prev,
-      [newChat.id]: [],
-    }));
+    try {
+      const updatedChats = [...chats, newChat];
+      await storageAdapter.setItem(STORAGE_KEY, updatedChats);
+      setChats(updatedChats);
+      setSelectedChat(newChat);
+
+      const updatedMessages = {
+        ...messages,
+        [newChat.id]: []
+      };
+      await storageAdapter.setItem(MESSAGES_KEY, updatedMessages);
+      setMessages(updatedMessages);
+    } catch (error) {
+      console.error('チャットの作成に失敗しました:', error);
+      throw error;
+    }
 
     return newChat;
   };
 
   // チャットの削除
-  const deleteChat = (chatId: string) => {
-    setChats(prev => prev.filter(chat => chat.id !== chatId));
-    setMessages(prev => {
-      const newMessages = { ...prev };
-      delete newMessages[chatId];
-      return newMessages;
-    });
+  const deleteChat = async (chatId: string) => {
+    try {
+      const updatedChats = chats.filter(chat => chat.id !== chatId);
+      await storageAdapter.setItem(STORAGE_KEY, updatedChats);
+      setChats(updatedChats);
 
-    if (selectedChat?.id === chatId) {
-      setSelectedChat(null);
+      const updatedMessages = { ...messages };
+      delete updatedMessages[chatId];
+      await storageAdapter.setItem(MESSAGES_KEY, updatedMessages);
+      setMessages(updatedMessages);
+
+      if (selectedChat?.id === chatId) {
+        setSelectedChat(null);
+      }
+    } catch (error) {
+      console.error('チャットの削除に失敗しました:', error);
+      throw error;
     }
   };
 
@@ -218,6 +278,7 @@ export const useChats = () => {
   };
 
   return {
+    isLoading,
     chats,
     selectedChat,
     selectChat,
