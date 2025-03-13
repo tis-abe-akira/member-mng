@@ -1,0 +1,26 @@
+# Project Rules & Patterns
+
+## Code Organization
+1. Components grouped by feature in src/components/
+2. Custom hooks for state management in src/hooks/
+3. Types defined in src/types/index.ts
+
+## Component Patterns
+1. Feature-based directory structure
+2. Separate container and presentational components
+3. Props interfaces defined at component level
+
+## State Management
+1. Custom hooks for domain-specific state
+2. Component-level state for UI interactions
+3. Props for component communication
+
+## TypeScript Usage
+1. Strict type checking enabled
+2. Interfaces for component props
+3. Type definitions in dedicated files
+
+## Development Workflow
+1. Feature development in isolated components
+2. Custom hooks for reusable logic
+3. TypeScript for type safety
