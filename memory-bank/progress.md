@@ -15,14 +15,16 @@
 
 ## In Progress
 1. Member Management
-   - 🟡 Member list display
-   - 🟡 Member detail view
-   - 🟡 Member form implementation
+   - ✅ Member list display
+   - ✅ Member detail view
+   - ✅ Member form implementation
 
 2. Chat System
-   - 🟡 Chat list component
-   - 🟡 Message display
-   - 🟡 Message input
+   - ✅ Chat list component
+   - ✅ Message display
+   - ✅ Message input
+   - ✅ Data persistence
+   - ✅ Member sync
 
 3. Tag Management
    - 🟡 Tag creation
@@ -52,17 +54,17 @@
    - チャット機能との同期が必要 (#1)
 
 2. Chat System
-   - データ永続化未実装
+   - ✅ データ永続化実装済み
+   - ✅ メンバー登録時の即時反映対応完了
+   - ✅ StorageAdapterの活用
    - リアルタイム更新の対応が必要
-   - メンバー登録時の即時反映対応が必要 (#1)
-   - StorageAdapterの活用が必要
 
 3. Tag System
    - データ永続化未実装
    - タグの一括操作機能が必要
 
 ## Next Priorities
-1. Complete core member management functionality
-2. Implement chat view synchronization with member management (#1)
-3. Add StorageAdapter support to chat system
-4. Finalize tag management system
+1. Implement real-time updates for chat
+2. Add storage persistence for tags
+3. Optimize performance for large data sets
+4. Enhance error handling and retry mechanisms
