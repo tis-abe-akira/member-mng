@@ -2,6 +2,15 @@
 
 ## Architecture Overview
 
+### Storage Pattern
+```mermaid
+flowchart TD
+    Components[Reactコンポーネント] --> Hooks[カスタムフック]
+    Hooks --> StorageAdapter[ストレージアダプター]
+    StorageAdapter --> LocalStorage[LocalStorage]
+    StorageAdapter -.-> Future[将来の実装\nFirebase/REST API等]
+```
+
 ### Component Structure
 ```mermaid
 flowchart TD
@@ -81,3 +90,5 @@ flowchart TD
 3. Custom hooks for state management
 4. Component-based architecture
 5. Modular CSS for styling
+6. Storage adapter pattern for data persistence
+7. LocalStorage implementation with future extensibility

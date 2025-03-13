@@ -4,15 +4,16 @@
 Building core functionality for member management and chat system
 
 ## Recent Changes
-1. Initial project setup
-2. Component structure implementation
-3. Custom hooks development
+1. Storage adapter pattern implementation
+2. LocalStorage integration
+3. Member data persistence
+4. Async operation support
 
 ## Active Development
 ### In Progress
-- Member management system
-- Chat functionality
-- Tag management
+- Member management system with persistence
+- Chat functionality implementation
+- Tag management system
 
 ### Next Steps
 1. Complete member CRUD operations
@@ -22,9 +23,11 @@ Building core functionality for member management and chat system
 ## Current Decisions
 1. Using custom hooks for state management
 2. Component-based architecture
-3. TypeScript for type safety
+3. Storage adapter pattern for data persistence
+4. LocalStorage as initial storage implementation
 
 ## Active Considerations
-1. State management optimization
-2. Component reusability
-3. Type safety maintenance
+1. Future storage implementations (Firebase, REST API)
+2. Data migration strategies
+3. Error handling for storage operations
+4. Offline data handling

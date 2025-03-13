@@ -22,6 +22,8 @@ src/
 │   ├── MemberList/
 │   └── TagManagement/
 ├── hooks/
+├── storage/
+│   └── StorageAdapter.ts
 ├── types/
 ├── assets/
 └── App.tsx
@@ -43,10 +45,17 @@ Located in `src/types/index.ts`:
 - Chat message types
 - Tag definitions
 
+## Storage Layer
+1. StorageAdapter
+   - インターフェース定義
+   - LocalStorage実装
+   - 将来の拡張性を考慮した非同期API
+
 ## Custom Hooks
 1. useMembers.ts
-   - Member CRUD operations
-   - Member state management
+   - Member CRUD operations with persistence
+   - Local state management
+   - Async storage operations
 
 2. useChats.ts
    - Chat message handling

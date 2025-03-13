@@ -5,11 +5,13 @@
    - ✅ Basic directory organization
    - ✅ Component hierarchy
    - ✅ Custom hooks setup
+   - ✅ Storage adapter implementation
 
 2. Development Environment
    - ✅ Vite configuration
    - ✅ TypeScript setup
    - ✅ ESLint integration
+   - ✅ LocalStorage integration
 
 ## In Progress
 1. Member Management
@@ -45,13 +47,16 @@
 
 ## Known Issues
 1. Member Management
-   - None reported yet
+   - データ永続化の実装済み
+   - 大容量データ時のパフォーマンス未検証
 
 2. Chat System
-   - None reported yet
+   - データ永続化未実装
+   - リアルタイム更新の対応が必要
 
 3. Tag System
-   - None reported yet
+   - データ永続化未実装
+   - タグの一括操作機能が必要
 
 ## Next Priorities
 1. Complete core member management functionality
