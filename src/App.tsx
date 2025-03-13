@@ -97,15 +97,21 @@ function App() {
     }
   };
 
-  const handleFormSubmit = (formData: Omit<Member, 'id' | 'isEditable' | 'createdAt'>) => {
-    if (editingMember) {
-      updateMember(editingMember.id, formData);
-    } else {
-      // 新しいメンバーを追加し、返されたメンバー情報を使ってチャットも作成
-      const newMember = addMember(formData);
-      chatState.createChat(newMember.id);
+  const handleFormSubmit = async (formData: Omit<Member, 'id' | 'isEditable' | 'createdAt'>) => {
+    try {
+      if (editingMember) {
+        await updateMember(editingMember.id, formData);
+      } else {
+        // 新しいメンバーを追加し、返されたメンバー情報を使ってチャットも作成
+        const newMember = await addMember(formData);
+        await chatState.createChat(newMember.id);
+        // メンバー追加後、チャットビューに自動遷移
+        setCurrentView('chat');
+      }
+      setIsFormOpen(false);
+    } catch (error) {
+      console.error('メンバー追加/更新に失敗しました:', error);
     }
-    setIsFormOpen(false);
   };
 
   const handleFormClose = () => {
@@ -138,6 +144,7 @@ function App() {
             deleteChat={chatState.deleteChat}
             getChatMessages={chatState.getChatMessages}
             currentUserId={chatState.currentUserId}
+            isLoading={chatState.isLoading}
           />
         )}
       </ContentContainer>

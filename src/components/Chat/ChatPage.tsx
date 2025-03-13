@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, Paper, Typography, AppBar, Toolbar, IconButton, Avatar, Divider, styled } from '@mui/material';
+import { Box, Paper, Typography, AppBar, Toolbar, IconButton, Avatar, Divider, styled, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ChatList } from './ChatList';
 import { MessageBubble } from './MessageBubble';
@@ -63,13 +63,14 @@ const NoSelectionContainer = styled(Box)(({ theme }) => ({
 }));
 
 interface ChatPageProps {
+  isLoading?: boolean;
   members: Member[];
   chats: Chat[];
   selectedChat: Chat | null;
-  selectChat: (chatId: string) => void;
-  sendMessage: (chatId: string, content: string) => Message;
-  createChat: (participantId: string) => Chat;
-  deleteChat: (chatId: string) => void;
+  selectChat: (chatId: string) => Promise<void>;
+  sendMessage: (chatId: string, content: string) => Promise<Message>;
+  createChat: (participantId: string) => Promise<Chat>;
+  deleteChat: (chatId: string) => Promise<void>;
   getChatMessages: (chatId: string) => Message[];
   currentUserId: string;
 }
@@ -81,7 +82,8 @@ export const ChatPage = ({
   selectChat,
   sendMessage,
   getChatMessages,
-  currentUserId
+  currentUserId,
+  isLoading = false
 }: ChatPageProps) => {
   const [isMobileView, setIsMobileView] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
@@ -102,17 +104,21 @@ export const ChatPage = ({
   }, []);
 
   // チャット選択時の処理
-  const handleChatSelect = (chatId: string) => {
-    selectChat(chatId);
+  const handleChatSelect = async (chatId: string) => {
+    await selectChat(chatId);
     if (isMobileView) {
       setShowMobileChat(true);
     }
   };
 
   // メッセージ送信時の処理
-  const handleSendMessage = (content: string) => {
+  const handleSendMessage = async (content: string) => {
     if (selectedChat) {
-      sendMessage(selectedChat.id, content);
+      try {
+        await sendMessage(selectedChat.id, content);
+      } catch (error) {
+        console.error('メッセージの送信に失敗しました:', error);
+      }
     }
   };
 
@@ -198,7 +204,12 @@ export const ChatPage = ({
           </Toolbar>
         </AppBar>
         <Divider />
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 2, position: 'relative' }}>
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
           <ChatList
             chats={chats}
             members={members}
@@ -206,6 +217,7 @@ export const ChatPage = ({
             onChatSelect={handleChatSelect}
             currentUserId={currentUserId}
           />
+          )}
         </Box>
       </ChatListContainer>
 
